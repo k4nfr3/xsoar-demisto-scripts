@@ -1,0 +1,49 @@
+commonfields:
+  id: 344254f6-4110-4063-8749-5ce2c8d0a28b
+  version: 44
+contentitemexportablefields:
+  contentitemfields:
+    propagationLabels:
+    - all
+name: get_roles
+script: |-
+  #Ingest arguments
+  username = demisto.args()["username"]
+
+  #Get User content
+  usercontent = demisto.executeCommand("getUserByUsername", {"username":username})
+
+
+  try:
+      roles = usercontent[0]['Contents'].get('roles')
+  except Exception:
+      roles = ''
+
+  MyResult = [
+      {
+          'roles' : roles
+      }
+  ]
+
+  results = CommandResults(
+      outputs_prefix='get_roles',
+      outputs_key_field='roles',
+      outputs=MyResult
+      )
+  return_results(results)
+type: python
+tags: []
+enabled: true
+args:
+- name: username
+  description: specify username (current by default)
+  defaultValue: ${incident.owner}
+outputs:
+- contextPath: roles
+  type: string
+scripttarget: 0
+subtype: python3
+pswd: ""
+runonce: false
+dockerimage: demisto/python3:3.8.5.10845
+runas: DBotWeakRole

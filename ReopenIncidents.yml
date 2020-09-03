@@ -1,0 +1,57 @@
+commonfields:
+  id: 6255d4ed-82d4-4b95-8ddf-1c9d80813fbd
+  version: 23
+name: ReopenIncidents
+script: |
+  import json
+
+  query = demisto.args()['query']
+
+  try:
+      incidents = [{'id': inc['id']} for inc in demisto.executeCommand('getIncidents',
+                                                                      {'query': query,
+                                                                       'size': '10000'})[0]['Contents']['data'] if inc['status'] == 2]
+  except:
+      demisto.results('No incidents found matching query.')
+      sys.exit(0)
+
+  if not incidents:
+      demisto.results('No closed incidents found matching query.')
+      sys.exit(0)
+
+  res = []
+  for inc in incidents:
+      inc['version'] = -1
+      data = json.dumps(inc)
+
+      try:
+          command_res = demisto.executeCommand("demisto-api-post", {"uri":"/investigation/{}/reopen".format(inc['id']),"body":data})[0]['Contents']
+          if "Script failed" not in command_res:
+              res.append({'Incident ID': inc['id'], 'Status': "Success"})
+          else:
+              command_res = demisto.executeCommand("demisto-api-post", {"uri":"/incident/investigate".format(inc['id']),"body":data})[0]['Contents']
+              if "Script failed" not in command_res:
+                  res.append({'Incident ID': inc['id'], 'Status': "Success"})
+              else:
+                  res.append({'Incident ID': inc['id'], 'Status': "Failure"})
+      except Exception as e:
+          demisto.results(e)
+          sys.exit(0)
+
+  demisto.results({'Type': entryTypes['note'],
+      'ContentsFormat': formats['markdown'],
+      'Contents': tableToMarkdown(name='Reopened Incidents', t=res)
+  })
+type: python
+tags: []
+comment: Switches incidents from Pending status into Active by starting the investigation.
+enabled: true
+args:
+- name: query
+  required: true
+  description: Lucene query for searching incidents
+scripttarget: 0
+subtype: python3
+runonce: false
+dockerimage: demisto/python3:3.7.4.977
+runas: DBotWeakRole

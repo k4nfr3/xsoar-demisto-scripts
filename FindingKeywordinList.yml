@@ -1,0 +1,60 @@
+commonfields:
+  id: e46a4d28-4fca-4873-8091-ed25c6e447a1
+  version: 1
+contentitemexportablefields:
+  contentitemfields:
+    propagationLabels:
+    - all
+name: FindingKeywordinList
+script: |+
+  demisto.debug(" PhishingFindingKeyword : Starting")
+  res = []
+
+  #Get List entries
+  resCmdName = demisto.executeCommand("getList",{"listName":demisto.args()["list"]})
+
+  final=False #Set False until there is a match
+
+  demisto.debug("FindingKeywordinList: List returned " + str(len(resCmdName)) + " entry")
+
+  for entry in resCmdName:
+              #List content is under key Contents
+              myvalue = entry.get("Contents")
+              #Parse if and split with separator coma
+              array_values= myvalue.split(",")
+              #Loop through all Keywords
+              for mylistvalue in array_values:
+                  if (demisto.args()["content"].lower().find(mylistvalue) != -1):
+                      demisto.debug("FindingKeywordinList : Found matching\n")
+                      demisto.debug(print("FindingKeywordinList Matching the following Keyword : " + mylistvalue))
+                      final=True
+
+  MyResult = [
+      {
+          'FoundKeyword' : final
+      }
+  ]
+  results = CommandResults(
+      outputs_prefix='FindingKeywordinList',
+      outputs_key_field='Found',
+      outputs=MyResult
+      )
+  return_results(results)
+
+
+
+type: python
+tags: []
+enabled: true
+args:
+- name: content
+- name: list
+outputs:
+- contextPath: Found
+  type: boolean
+scripttarget: 0
+subtype: python3
+pswd: ""
+runonce: false
+dockerimage: demisto/python3:3.8.3.9324
+runas: DBotWeakRole
