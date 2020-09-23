@@ -1,0 +1,38 @@
+commonfields:
+  id: 4acc03c4-7d2d-460d-8cbd-4ae58ffe3013
+  version: 52
+vcShouldKeepItemLegacyProdMachine: false
+name: clear_notes
+script: |-
+  demisto.debug("clear_notes : starting ****************************************************")
+  incidentId=demisto.args()['incidentId']
+  incident_entries = demisto.executeCommand('getEntries', {'id' : incidentId });
+  demisto.debug("clear_notes : returned " + str(len(incident_entries))+" entries " )
+
+  i=0
+  cleared_notes=0
+  for incident_entry in incident_entries:
+      i+=1
+      mytype=incident_entry['Type']
+      Note=incident_entry['Note']
+
+      if (mytype==1) and (Note==True):
+          demisto.debug("clear_notes : Found Type=" + str(mytype)+ "  ID="+str(i)+"@"+str(incidentId))
+          demisto.executeCommand("markAsNote", {"entryIDs":""+str(i)+"@"+str(incidentId), "isNote":False})
+          cleared_notes+=1
+
+  demisto.results("Done cleared "+str(cleared_notes) + " notes")
+  demisto.debug("clear_notes : finish ****************************************************")
+type: python
+tags: []
+enabled: true
+args:
+- name: incidentId
+  required: true
+  description: Incident Id ${incident.
+scripttarget: 0
+subtype: python3
+pswd: ""
+runonce: false
+dockerimage: demisto/python3:3.8.5.10845
+runas: DBotWeakRole
