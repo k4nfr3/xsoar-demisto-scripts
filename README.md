@@ -12,5 +12,7 @@ A little script which uses the rest API of Demisto to reopen a case as there is 
 ## FindingKeywordinList.yml
 A little python script to lookup in a list (given as argument) some keyword. 
 
+## Clear_notes.yml
+A little python script which loops through all the incident ID entries and checks if they are highlighed Notes, and then unpublish them. Usefull when writing ReRun playbook types. 
 
 
