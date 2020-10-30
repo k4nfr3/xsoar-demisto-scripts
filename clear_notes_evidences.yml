@@ -1,0 +1,55 @@
+commonfields:
+  id: 4acc03c4-7d2d-460d-8cbd-4ae58ffe3013
+  version: 91
+vcShouldKeepItemLegacyProdMachine: false
+name: clear_notes_evidences
+script: |-
+  demisto.debug("clear_notes_evidences : starting ****************************************************")
+  incidentId=demisto.args()['incidentId']
+
+
+  incident_entries = demisto.executeCommand('getEntries', {'id' : incidentId });
+  demisto.debug("clear_notes_evidences : returned " + str(len(incident_entries))+" entries " )
+
+  # Clearing Notes via looping through each war room entry and asking the type and markAsNote isnote=False
+  i=0
+  cleared_notes=0
+  for incident_entry in incident_entries:
+      i+=1
+
+      mytype=incident_entry['Type']
+      Note=incident_entry['Note']
+
+      if (mytype==1) and (Note==True):
+          demisto.debug("clear_notes_evidences : Found Type=" + str(mytype)+ "  ID="+str(i)+"@"+str(incidentId))
+          demisto.executeCommand("markAsNote", {"entryIDs":""+str(i)+"@"+str(incidentId), "isNote":False})
+          cleared_notes+=1
+      #else :
+      #    demisto.debug("clear_notes_evidences : Found Type=" + str(mytype)+ "  ID="+str(i)+"@"+str(incidentId))
+
+
+  #Clearing Evidences via the API rest integration
+  cleared_evidences=0
+  array_response=demisto.executeCommand("demisto-api-post", {"uri":"/evidence/search", "body":{"incidentID":incidentId}})
+  for response in array_response:
+      array_evidence=response['Contents']['response']['evidences']
+      for evidence in array_evidence:
+          evidence_id_to_delete=evidence['id']
+          res=demisto.executeCommand("demisto-api-post", {"uri":"/evidence/delete", "body":{"evidenceID":evidence_id_to_delete}})
+          cleared_evidences+=1
+
+  demisto.results("Done cleared "+str(cleared_notes) + " note(s) and "+str(cleared_evidences) + " evidence(s)")
+  demisto.debug("clear_notes_evidences : finish ****************************************************")
+type: python
+tags: []
+enabled: true
+args:
+- name: incidentId
+  required: true
+  description: Incident Id ${incident.
+scripttarget: 0
+subtype: python3
+pswd: ""
+runonce: false
+dockerimage: demisto/python3:3.8.5.10845
+runas: DBotWeakRole
