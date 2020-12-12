@@ -19,6 +19,12 @@ A little python script which loops through all the incident ID entries and check
 A little python script which loops through all the incident ID entries and checks if they are highlighed Notes, and then unpublish them. Usefull when writing ReRun playbook types.
 And it clears all the evidences of an Incident ID using the Demisto API Rest (only way)
 
+## jarm.yml
+jarm.py from https://github.com/salesforce/jarm but adapted for XSOAR
 
+## jarm_lookup.yml
+A small automation with some known JARM fingerprints
+
+see jarm.jpg to see how to use it
 
 
